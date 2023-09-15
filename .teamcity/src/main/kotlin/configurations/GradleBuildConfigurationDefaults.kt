@@ -8,6 +8,7 @@ import common.VersionedSettingsBranch
 import common.applyDefaultSettings
 import common.buildToolGradleParameters
 import common.checkCleanM2AndAndroidUserHome
+import common.cleanUpGitUntrackedFilesAndDirectories
 import common.cleanUpPerformanceBuildDir
 import common.compileAllDependency
 import common.dependsOn
@@ -15,6 +16,8 @@ import common.functionalTestParameters
 import common.gradleWrapper
 import common.killProcessStep
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildFeatures
+import jetbrains.buildServer.configs.kotlin.v2019_2.BuildStep
+import jetbrains.buildServer.configs.kotlin.v2019_2.BuildStep.*
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildSteps
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildType
 import jetbrains.buildServer.configs.kotlin.v2019_2.ProjectFeatures
@@ -93,9 +96,14 @@ fun BaseGradleBuildType.gradleRunnerStep(
     os: Os = Os.LINUX,
     extraParameters: String = "",
     daemon: Boolean = true,
-    maxParallelForks: String = "%maxParallelForks%"
+    maxParallelForks: String = "%maxParallelForks%",
+    isRetry: Boolean = false,
 ) {
-    val buildScanTags = model.buildScanTags + listOfNotNull(stage?.id)
+    val stepName: String = if (isRetry) "GRADLE_RETRY_RUNNER" else "GRADLE_RUNNER"
+    val stepExecutionMode: ExecutionMode = if (isRetry) ExecutionMode.RUN_ONLY_ON_FAILURE else ExecutionMode.RUN_ON_SUCCESS
+    val extraBuildScanTags: List<String> = if (isRetry) listOf("RetriedBuild") else emptyList()
+
+    val buildScanTags = model.buildScanTags + listOfNotNull(stage?.id) + extraBuildScanTags
     val parameters = (
         buildToolGradleParameters(daemon, maxParallelForks = maxParallelForks) +
             listOf(extraParameters) +
@@ -105,9 +113,10 @@ fun BaseGradleBuildType.gradleRunnerStep(
 
     steps {
         gradleWrapper(this@gradleRunnerStep) {
-            name = "GRADLE_RUNNER"
+            name = stepName
             tasks = "clean $gradleTasks"
             gradleParams = parameters
+            executionMode = stepExecutionMode
         }
     }
 }
@@ -137,6 +146,20 @@ fun applyDefaults(
     applyDefaultDependencies(model, buildType, dependsOnQuickFeedbackLinux)
 }
 
+private fun BaseGradleBuildType.addRetrySteps(
+    model: CIBuildModel,
+    gradleTasks: String,
+    os: Os = Os.LINUX,
+    arch: Arch = Arch.AMD64,
+    extraParameters: String = "",
+    maxParallelForks: String = "%maxParallelForks%",
+    daemon: Boolean = true,
+) {
+    killProcessStep("KILL_ALL_GRADLE_PROCESSES", os, arch, executionMode = ExecutionMode.RUN_ONLY_ON_FAILURE)
+    cleanUpGitUntrackedFilesAndDirectories()
+    gradleRunnerStep(model, gradleTasks, os, extraParameters, daemon, maxParallelForks = maxParallelForks, isRetry = true)
+}
+
 fun applyTestDefaults(
     model: CIBuildModel,
     buildType: BaseGradleBuildType,
@@ -161,6 +184,7 @@ fun applyTestDefaults(
     buildType.killProcessStep("KILL_LEAKED_PROCESSES_FROM_PREVIOUS_BUILDS", os, arch)
     buildType.cleanUpPerformanceBuildDir(os)
     buildType.gradleRunnerStep(model, gradleTasks, os, extraParameters, daemon, maxParallelForks = maxParallelForks)
+    buildType.addRetrySteps(model, gradleTasks, os, arch, extraParameters)
     buildType.killProcessStep("KILL_PROCESSES_STARTED_BY_GRADLE", os, arch)
 
     buildType.steps {

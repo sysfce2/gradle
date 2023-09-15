@@ -263,11 +263,11 @@ fun functionalTestParameters(os: Os): List<String> {
 fun promotionBuildParameters(dependencyBuildId: RelativeId, extraParameters: String, gitUserName: String, gitUserEmail: String) =
     """-PcommitId=%dep.$dependencyBuildId.build.vcs.number% $extraParameters "-PgitUserName=$gitUserName" "-PgitUserEmail=$gitUserEmail" $pluginPortalUrlOverride %additional.gradle.parameters%"""
 
-fun BuildType.killProcessStep(stepName: String, os: Os, arch: Arch = Arch.AMD64) {
+fun BuildType.killProcessStep(stepName: String, os: Os, arch: Arch = Arch.AMD64, executionMode: BuildStep.ExecutionMode = BuildStep.ExecutionMode.ALWAYS) {
     steps {
         script {
             name = stepName
-            executionMode = BuildStep.ExecutionMode.ALWAYS
+            this.executionMode = executionMode
             scriptContent = "\"${javaHome(BuildToolBuildJvm, os, arch)}/bin/java\" build-logic/cleanup/src/main/java/gradlebuild/cleanup/services/KillLeakingJavaProcesses.java $stepName"
             skipConditionally(this@killProcessStep)
         }

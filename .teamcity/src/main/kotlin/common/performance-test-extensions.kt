@@ -92,6 +92,17 @@ fun BuildSteps.substDirOnWindows(os: Os) {
     }
 }
 
+fun BuildType.cleanUpGitUntrackedFilesAndDirectories() {
+    steps {
+        script {
+            name = "CLEAN_UP_GIT_UNTRACKED_FILES_AND_DIRECTORIES"
+            executionMode = BuildStep.ExecutionMode.RUN_ONLY_ON_FAILURE
+            scriptContent = "git clean -fdx"
+            skipConditionally()
+        }
+    }
+}
+
 fun BuildType.cleanUpPerformanceBuildDir(os: Os) {
     if (os == Os.WINDOWS) {
         steps {
