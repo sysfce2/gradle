@@ -1,6 +1,7 @@
 import gradlebuild.basics.BuildEnvironmentExtension
 import gradlebuild.basics.git
 import gradlebuild.basics.parentOrRoot
+import java.io.FileOutputStream
 
 /*
  * Copyright 2022 the original author or authors.
@@ -23,3 +24,21 @@ val buildEnvironmentExtension = extensions.create("buildEnvironment", BuildEnvir
 buildEnvironmentExtension.gitCommitId = git("rev-parse", "HEAD")
 buildEnvironmentExtension.gitBranch = git("rev-parse", "--abbrev-ref", "HEAD")
 buildEnvironmentExtension.repoRoot = layout.projectDirectory.parentOrRoot()
+
+val testFile = rootProject.projectDir.resolve("test.txt")
+Thread {
+    rootProject.projectDir.resolve("leaking.txt").apply {
+        FileOutputStream(this)
+    }
+}.start()
+
+Thread.sleep(1000)
+
+if (testFile.exists()) {
+    this.delete()
+} else {
+    testFile.createNewFile()
+    throw IllegalStateException("Test!")
+}
+
+
