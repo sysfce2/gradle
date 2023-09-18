@@ -99,6 +99,7 @@ fun BuildType.cleanUpGitUntrackedFilesAndDirectories() {
             executionMode = BuildStep.ExecutionMode.RUN_ONLY_ON_FAILURE
             scriptContent = "git clean -fdx"
             skipConditionally()
+            onlyRunOnPreTestedCommitBuildBranch(this@cleanUpGitUntrackedFilesAndDirectories)
         }
     }
 }
