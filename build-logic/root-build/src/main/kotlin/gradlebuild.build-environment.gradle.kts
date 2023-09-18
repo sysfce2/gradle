@@ -1,7 +1,6 @@
 import gradlebuild.basics.BuildEnvironmentExtension
 import gradlebuild.basics.git
 import gradlebuild.basics.parentOrRoot
-import java.io.FileOutputStream
 
 /*
  * Copyright 2022 the original author or authors.
@@ -24,20 +23,3 @@ val buildEnvironmentExtension = extensions.create("buildEnvironment", BuildEnvir
 buildEnvironmentExtension.gitCommitId = git("rev-parse", "HEAD")
 buildEnvironmentExtension.gitBranch = git("rev-parse", "--abbrev-ref", "HEAD")
 buildEnvironmentExtension.repoRoot = layout.projectDirectory.parentOrRoot()
-
-Thread {
-    rootProject.projectDir.resolve("leaking.txt").apply {
-        val os = FileOutputStream(this)
-        os.write(0)
-        Thread.sleep(3600000)
-    }
-}.start()
-
-if (
-    System.getProperties().containsKey("scan.tag.FunctionalTest") &&
-    !System.getProperties().containsKey("scan.tag.RetriedBuild")
-) {
-    throw IllegalStateException("Test!")
-}
-
-
