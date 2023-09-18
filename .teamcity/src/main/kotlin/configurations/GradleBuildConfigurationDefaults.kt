@@ -3,8 +3,9 @@ package configurations
 import common.Arch
 import common.BuildToolBuildJvm
 import common.Jvm
-import common.KillProcessMode
-import common.KillProcessMode.*
+import common.KillProcessMode.KILL_ALL_GRADLE_PROCESSES
+import common.KillProcessMode.KILL_LEAKED_PROCESSES_FROM_PREVIOUS_BUILDS
+import common.KillProcessMode.KILL_PROCESSES_STARTED_BY_GRADLE
 import common.Os
 import common.VersionedSettingsBranch
 import common.applyDefaultSettings
@@ -19,8 +20,7 @@ import common.gradleWrapper
 import common.killProcessStep
 import common.onlyRunOnPreTestedCommitBuildBranch
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildFeatures
-import jetbrains.buildServer.configs.kotlin.v2019_2.BuildStep
-import jetbrains.buildServer.configs.kotlin.v2019_2.BuildStep.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.BuildStep.ExecutionMode
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildSteps
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildType
 import jetbrains.buildServer.configs.kotlin.v2019_2.ProjectFeatures
@@ -103,7 +103,7 @@ fun BaseGradleBuildType.gradleRunnerStep(
     isRetry: Boolean = false,
 ) {
     val stepName: String = if (isRetry) "GRADLE_RETRY_RUNNER" else "GRADLE_RUNNER"
-    val stepExecutionMode: ExecutionMode = if (isRetry) ExecutionMode.RUN_ONLY_ON_FAILURE else ExecutionMode.RUN_ON_SUCCESS
+    val stepExecutionMode: ExecutionMode = if (isRetry) ExecutionMode.RUN_ONLY_ON_FAILURE else ExecutionMode.DEFAULT
     val extraBuildScanTags: List<String> = if (isRetry) listOf("RetriedBuild") else emptyList()
 
     val buildScanTags = model.buildScanTags + listOfNotNull(stage?.id) + extraBuildScanTags

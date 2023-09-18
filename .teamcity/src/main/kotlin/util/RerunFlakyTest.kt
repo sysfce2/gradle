@@ -20,8 +20,8 @@ import common.Arch
 import common.BuildToolBuildJvm
 import common.JvmVendor
 import common.JvmVersion
-import common.KillProcessMode
-import common.KillProcessMode.*
+import common.KillProcessMode.KILL_LEAKED_PROCESSES_FROM_PREVIOUS_BUILDS
+import common.KillProcessMode.KILL_PROCESSES_STARTED_BY_GRADLE
 import common.Os
 import common.applyDefaultSettings
 import common.buildToolGradleParameters
