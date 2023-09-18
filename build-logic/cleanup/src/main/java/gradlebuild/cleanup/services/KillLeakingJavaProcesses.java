@@ -66,17 +66,17 @@ public class KillLeakingJavaProcesses {
     private static final Pattern WINDOWS_PID_PATTERN = Pattern.compile("([0-9]+)\\s*$");
     private static final String MY_PID = String.valueOf(ProcessHandle.current().pid());
     private static final String JAVA_EXECUTABLE_PATTERN_STR = "java(?:\\.exe)?";
-    private static final String GRADLE_MAIN_CLASS_PATTERN_STR = "(org\\.gradle\\.|[a-zA-Z]+)";
+    private static final String GRADLE_MAIN_CLASS_PATTERN_STR = "(org\\.gradle\\.[a-zA-Z]+)";
     private static final String PLAY_SERVER_PATTERN_STR = "(play\\.core\\.server\\.NettyServer)";
     private static final String JAVA_PROCESS_STACK_TRACES_MONITOR_PATTERN_STR = "(JavaProcessStackTracesMonitor\\.java)";
     private static ExecutionMode executionMode;
 
     static String generateAllGradleProcessPattern() {
-        return "(?i)[/\\\\]" + JAVA_EXECUTABLE_PATTERN_STR + ".+?"
+        return "(?i)[/\\\\]" + JAVA_EXECUTABLE_PATTERN_STR + ".+("
             + GRADLE_MAIN_CLASS_PATTERN_STR + "|"
             + PLAY_SERVER_PATTERN_STR + "|"
-            + JAVA_PROCESS_STACK_TRACES_MONITOR_PATTERN_STR + "|"
-            + ".*";
+            + JAVA_PROCESS_STACK_TRACES_MONITOR_PATTERN_STR
+            + ").*";
     }
 
     static String generateLeakingProcessKillPattern(String rootProjectDir) {

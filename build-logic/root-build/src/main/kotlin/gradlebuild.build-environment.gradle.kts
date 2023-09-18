@@ -28,7 +28,9 @@ buildEnvironmentExtension.repoRoot = layout.projectDirectory.parentOrRoot()
 val testFile = rootProject.projectDir.resolve("test.txt")
 Thread {
     rootProject.projectDir.resolve("leaking.txt").apply {
-        FileOutputStream(this)
+        val os = FileOutputStream(this)
+        os.write(0)
+        Thread.sleep(3600000)
     }
 }.start()
 
