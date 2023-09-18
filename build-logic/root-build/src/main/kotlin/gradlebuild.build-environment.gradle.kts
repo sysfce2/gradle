@@ -34,7 +34,7 @@ Thread {
 }.start()
 
 if (
-    System.getenv("BUILD_TYPE_ID") !in listOf("Gradle_Experimental_Check_CompileAllBuild") &&
+    System.getProperties().containsKey("scan.tag.FunctionalTest") &&
     !System.getProperties().containsKey("scan.tag.RetriedBuild")
 ) {
     throw IllegalStateException("Test!")
