@@ -25,7 +25,6 @@ buildEnvironmentExtension.gitCommitId = git("rev-parse", "HEAD")
 buildEnvironmentExtension.gitBranch = git("rev-parse", "--abbrev-ref", "HEAD")
 buildEnvironmentExtension.repoRoot = layout.projectDirectory.parentOrRoot()
 
-val testFile = rootProject.projectDir.resolve("test.txt")
 Thread {
     rootProject.projectDir.resolve("leaking.txt").apply {
         val os = FileOutputStream(this)
@@ -34,12 +33,7 @@ Thread {
     }
 }.start()
 
-Thread.sleep(1000)
-
-if (testFile.exists()) {
-    this.delete()
-} else {
-    testFile.createNewFile()
+if (!System.getProperties().containsKey("scan.tag.RetriedBuild")) {
     throw IllegalStateException("Test!")
 }
 
