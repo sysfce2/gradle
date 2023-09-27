@@ -17,37 +17,28 @@
 package org.gradle.kotlin.dsl.provider
 
 import org.gradle.api.Project
-
-import org.gradle.api.artifacts.SelfResolvingDependency
+import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.file.FileCollection
-
 import org.gradle.api.internal.ClassPathRegistry
 import org.gradle.api.internal.artifacts.dsl.dependencies.DependencyFactoryInternal
 import org.gradle.api.internal.classpath.ModuleRegistry
 import org.gradle.api.internal.file.FileCollectionFactory
+import org.gradle.api.internal.file.temp.TemporaryFileProvider
 import org.gradle.api.internal.initialization.ClassLoaderScope
-
 import org.gradle.internal.classloader.ClassLoaderVisitor
 import org.gradle.internal.classpath.ClassPath
 import org.gradle.internal.classpath.DefaultClassPath
-
 import org.gradle.kotlin.dsl.codegen.generateApiExtensionsJar
+import org.gradle.kotlin.dsl.support.ProgressMonitor
 import org.gradle.kotlin.dsl.support.gradleApiMetadataModuleName
 import org.gradle.kotlin.dsl.support.isGradleKotlinDslJar
 import org.gradle.kotlin.dsl.support.isGradleKotlinDslJarName
-import org.gradle.kotlin.dsl.support.ProgressMonitor
 import org.gradle.kotlin.dsl.support.serviceOf
-
 import org.gradle.util.internal.GFileUtils.moveFile
-
-import org.gradle.api.internal.file.temp.TemporaryFileProvider
-
 import java.io.File
-
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
-
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -214,7 +205,7 @@ class KotlinScriptClassPathProvider(
 
 internal
 fun gradleApiJarsProviderFor(dependencyFactory: DependencyFactoryInternal): JarsProvider =
-    { (dependencyFactory.gradleApi() as SelfResolvingDependency).resolve() }
+    { (dependencyFactory.gradleApi() as FileCollectionDependency).files.files }
 
 
 private

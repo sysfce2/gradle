@@ -37,7 +37,7 @@ public class ProjectDependencyMetadataConverter extends AbstractDependencyMetada
     @Override
     public LocalOriginDependencyMetadata createDependencyMetadata(ModuleDependency dependency) {
         ProjectDependencyInternal projectDependency = (ProjectDependencyInternal) dependency;
-        ComponentSelector selector = DefaultProjectComponentSelector.newSelector(projectDependency.getDependencyProject(),
+        ComponentSelector selector = DefaultProjectComponentSelector.newSelector(projectDependency.getProjectComponentIdentifier(),
                 ((AttributeContainerInternal)projectDependency.getAttributes()).asImmutable(),
                 projectDependency.getRequestedCapabilities());
 

@@ -939,7 +939,7 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
     @Override
     public TaskDependency getTaskDependencyFromProjectDependency(final boolean useDependedOn, final String taskName) {
         if (useDependedOn) {
-            return new TasksFromProjectDependencies(taskName, this::getAllDependencies, taskDependencyFactory);
+            return new TasksFromProjectDependencies(taskName, this::getAllDependencies, taskDependencyFactory, projectStateRegistry);
         } else {
             return new TasksFromDependentProjects(taskName, getName(), taskDependencyFactory);
         }
