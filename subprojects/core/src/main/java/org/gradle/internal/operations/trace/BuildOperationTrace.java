@@ -27,6 +27,7 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.gradle.StartParameter;
+import org.gradle.api.NonNullApi;
 import org.gradle.internal.UncheckedException;
 import org.gradle.internal.concurrent.Stoppable;
 import org.gradle.internal.operations.BuildOperationDescriptor;
@@ -395,6 +396,10 @@ public class BuildOperationTrace implements Stoppable {
             .create();
     }
 
+    /**
+     * Adapter to handle JSON-based {@link Class} (de)serialization.
+     */
+    @NonNullApi
     private static class ClassAdapter extends TypeAdapter<Class<?>> {
 
         @Override
