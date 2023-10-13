@@ -42,15 +42,6 @@ class SerializedOperationFinish implements SerializedOperation {
         this.resultClassName = result == null ? null : finishEvent.getResult().getClass().getName();
         this.failureMsg = finishEvent.getFailure() == null ? null : finishEvent.getFailure().toString();
     }
-
-    SerializedOperationFinish(Map<String, ?> map) {
-        this.id = ((Integer) map.get("id")).longValue();
-        this.endTime = (Long) map.get("endTime");
-        this.result = map.get("result");
-        this.resultClassName = (String) map.get("resultClassName");
-        this.failureMsg = (String) map.get("failure");
-    }
-
     @Override
     public Map<String, ?> toMap() {
         ImmutableMap.Builder<String, Object> map = ImmutableMap.builder();

@@ -22,6 +22,10 @@ import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import org.gradle.StartParameter;
 import org.gradle.internal.UncheckedException;
 import org.gradle.internal.concurrent.Stoppable;
@@ -53,7 +57,6 @@ import java.util.Map;
 import java.util.Queue;
 
 import static org.gradle.internal.Cast.uncheckedCast;
-import static org.gradle.internal.Cast.uncheckedNonnullCast;
 
 /**
  * Writes files describing the build operation stream for a build.
@@ -282,18 +285,18 @@ public class BuildOperationTrace implements Stoppable {
             Files.asCharSource(logFile, Charsets.UTF_8).readLines(new LineProcessor<Void>() {
                 @Override
                 public boolean processLine(@SuppressWarnings("NullableProblems") String line) {
-                    Map<String, ?> map = uncheckedNonnullCast(gson.fromJson(line, Map.class));
-                    if (map.containsKey("startTime")) {
-                        SerializedOperationStart serialized = new SerializedOperationStart(map);
+                    JsonObject jsonObject = gson.fromJson(line, JsonObject.class);
+                    if (jsonObject.has("startTime")) {
+                        SerializedOperationStart serialized = gson.fromJson(jsonObject, SerializedOperationStart.class);
                         pendings.put(serialized.id, new PendingOperation(serialized));
                         childrens.put(serialized.id, new LinkedList<>());
-                    } else if (map.containsKey("time")) {
-                        SerializedOperationProgress serialized = new SerializedOperationProgress(map);
+                    } else if (jsonObject.has("time")) {
+                        SerializedOperationProgress serialized = gson.fromJson(jsonObject, SerializedOperationProgress.class);
                         PendingOperation pending = pendings.get(serialized.id);
                         assert pending != null : "did not find owner of progress event with ID " + serialized.id;
                         pending.progress.add(serialized);
                     } else {
-                        SerializedOperationFinish finish = new SerializedOperationFinish(map);
+                        SerializedOperationFinish finish = gson.fromJson(jsonObject, SerializedOperationFinish.class);
 
                         PendingOperation pending = pendings.remove(finish.id);
                         assert pending != null;
@@ -387,7 +390,27 @@ public class BuildOperationTrace implements Stoppable {
     }
 
     private static Gson createGson() {
-        return new GsonBuilder().create();
+        return new GsonBuilder()
+            .registerTypeHierarchyAdapter(Class.class, new ClassAdapter())
+            .create();
+    }
+
+    private static class ClassAdapter extends TypeAdapter<Class<?>> {
+
+        @Override
+        public void write(JsonWriter out, Class<?> value) throws IOException {
+            out.value(value.getName());
+        }
+
+        @Override
+        public Class<?> read(JsonReader in) throws IOException {
+            String className = in.nextString();
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     // TODO:

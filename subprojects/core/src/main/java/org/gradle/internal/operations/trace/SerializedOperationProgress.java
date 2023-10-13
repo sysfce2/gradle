@@ -38,13 +38,6 @@ class SerializedOperationProgress implements SerializedOperation {
         this.detailsClassName = details == null ? null : progressEvent.getDetails().getClass().getName();
     }
 
-    SerializedOperationProgress(Map<String, ?> map) {
-        this.id = ((Integer) map.get("id")).longValue();
-        this.time = (Long) map.get("time");
-        this.details = map.get("details");
-        this.detailsClassName = (String) map.get("detailsClassName");
-    }
-
     @Override
     public Map<String, ?> toMap() {
         ImmutableMap.Builder<String, Object> map = ImmutableMap.builder();

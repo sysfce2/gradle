@@ -44,16 +44,6 @@ class SerializedOperationStart implements SerializedOperation {
         this.detailsClassName = details == null ? null : descriptor.getDetails().getClass().getName();
     }
 
-    SerializedOperationStart(Map<String, ?> map) {
-        this.id = ((Integer) map.get("id")).longValue();
-        Integer parentId = (Integer) map.get("parentId");
-        this.parentId = parentId == null ? null : parentId.longValue();
-        this.displayName = (String) map.get("displayName");
-        this.startTime = (Long) map.get("startTime");
-        this.details = map.get("details");
-        this.detailsClassName = (String) map.get("detailsClassName");
-    }
-
     @Override
     public Map<String, ?> toMap() {
         ImmutableMap.Builder<String, Object> map = ImmutableMap.builder();
