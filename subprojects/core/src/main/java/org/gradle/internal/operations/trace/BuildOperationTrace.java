@@ -18,16 +18,11 @@ package org.gradle.internal.operations.trace;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.StandardSystemProperty;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
-import groovy.json.JsonGenerator;
-import groovy.json.JsonOutput;
-import groovy.json.JsonSlurper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.gradle.StartParameter;
-import org.gradle.api.NonNullApi;
 import org.gradle.internal.UncheckedException;
 import org.gradle.internal.concurrent.Stoppable;
 import org.gradle.internal.operations.BuildOperationDescriptor;
@@ -93,7 +88,7 @@ public class BuildOperationTrace implements Stoppable {
 
     private final String basePath;
     private final OutputStream logOutputStream;
-    private final JsonGenerator jsonGenerator = createJsonGenerator();
+    private final Gson gson = createGson();
 
     private final BuildOperationListenerManager buildOperationListenerManager;
 
@@ -165,30 +160,22 @@ public class BuildOperationTrace implements Stoppable {
     }
 
     private void write(SerializedOperation operation) {
-        Thread currentThread = Thread.currentThread();
-        ClassLoader previousClassLoader = currentThread.getContextClassLoader();
-        currentThread.setContextClassLoader(JsonOutput.class.getClassLoader());
+        String json = gson.toJson(operation.toMap());
         try {
-            String json = jsonGenerator.toJson(operation.toMap());
-            try {
-                synchronized (logOutputStream) {
-                    logOutputStream.write(json.getBytes(StandardCharsets.UTF_8));
-                    logOutputStream.write(NEWLINE);
-                    logOutputStream.flush();
-                }
-            } catch (IOException e) {
-                throw UncheckedException.throwAsUncheckedException(e);
+            synchronized (logOutputStream) {
+                logOutputStream.write(json.getBytes(StandardCharsets.UTF_8));
+                logOutputStream.write(NEWLINE);
+                logOutputStream.flush();
             }
-        } finally {
-            currentThread.setContextClassLoader(previousClassLoader);
+        } catch (IOException e) {
+            throw UncheckedException.throwAsUncheckedException(e);
         }
     }
 
     private void writeDetailTree(List<BuildOperationRecord> roots) throws IOException {
         try {
-            String rawJson = jsonGenerator.toJson(BuildOperationTree.serialize(roots));
-            String prettyJson = JsonOutput.prettyPrint(rawJson);
-            Files.asCharSink(file(basePath, "-tree.json"), Charsets.UTF_8).write(prettyJson);
+            String json = gson.toJson(BuildOperationTree.serialize(roots));
+            Files.asCharSink(file(basePath, "-tree.json"), Charsets.UTF_8).write(json);
         } catch (OutOfMemoryError e) {
             System.err.println("Failed to write build operation trace JSON due to out of memory.");
         }
@@ -237,12 +224,12 @@ public class BuildOperationTrace implements Stoppable {
 
                         if (record.details != null) {
                             stringBuilder.append(" ");
-                            stringBuilder.append(jsonGenerator.toJson(record.details));
+                            stringBuilder.append(gson.toJson(record.details));
                         }
 
                         if (record.result != null) {
                             stringBuilder.append(" ");
-                            stringBuilder.append(jsonGenerator.toJson(record.result));
+                            stringBuilder.append(gson.toJson(record.result));
                         }
 
                         stringBuilder.append(" [");
@@ -285,9 +272,9 @@ public class BuildOperationTrace implements Stoppable {
     }
 
     private static List<BuildOperationRecord> readLogToTreeRoots(final File logFile) {
-        try {
-            final JsonSlurper slurper = new JsonSlurper();
+        Gson gson = createGson();
 
+        try {
             final List<BuildOperationRecord> roots = new ArrayList<>();
             final Map<Object, PendingOperation> pendings = new HashMap<>();
             final Map<Object, List<BuildOperationRecord>> childrens = new HashMap<>();
@@ -295,7 +282,7 @@ public class BuildOperationTrace implements Stoppable {
             Files.asCharSource(logFile, Charsets.UTF_8).readLines(new LineProcessor<Void>() {
                 @Override
                 public boolean processLine(@SuppressWarnings("NullableProblems") String line) {
-                    Map<String, ?> map = uncheckedNonnullCast(slurper.parseText(line));
+                    Map<String, ?> map = uncheckedNonnullCast(gson.fromJson(line, Map.class));
                     if (map.containsKey("startTime")) {
                         SerializedOperationStart serialized = new SerializedOperationStart(map);
                         pendings.put(serialized.id, new PendingOperation(serialized));
@@ -399,44 +386,28 @@ public class BuildOperationTrace implements Stoppable {
         }
     }
 
-    @NonNullApi
-    private static class JsonClassConverter implements JsonGenerator.Converter {
-        @Override
-        public boolean handles(Class<?> type) {
-            return Class.class.equals(type);
-        }
-
-        @Override
-        public Object convert(Object value, String key) {
-            Class<?> clazz = (Class<?>) value;
-            return clazz.getName();
-        }
+    private static Gson createGson() {
+        return new GsonBuilder().create();
     }
 
-    private static JsonGenerator createJsonGenerator() {
-        return new JsonGenerator.Options()
-            .addConverter(new JsonClassConverter())
-            .addConverter(new JsonThrowableConverter())
-            .build();
-    }
-
-    @NonNullApi
-    private static class JsonThrowableConverter implements JsonGenerator.Converter {
-        @Override
-        public boolean handles(Class<?> type) {
-            return Throwable.class.isAssignableFrom(type);
-        }
-
-        @Override
-        public Object convert(Object value, String key) {
-            Throwable throwable = (Throwable) value;
-            String message = throwable.getMessage();
-            Builder<Object, Object> builder = ImmutableMap.builder();
-            if (message != null) {
-                builder.put("message", message);
-            }
-            builder.put("stackTrace", Throwables.getStackTraceAsString(throwable));
-            return builder.build();
-        }
-    }
+    // TODO:
+//    @NonNullApi
+//    private static class JsonThrowableConverter implements JsonGenerator.Converter {
+//        @Override
+//        public boolean handles(Class<?> type) {
+//            return Throwable.class.isAssignableFrom(type);
+//        }
+//
+//        @Override
+//        public Object convert(Object value, String key) {
+//            Throwable throwable = (Throwable) value;
+//            String message = throwable.getMessage();
+//            Builder<Object, Object> builder = ImmutableMap.builder();
+//            if (message != null) {
+//                builder.put("message", message);
+//            }
+//            builder.put("stackTrace", Throwables.getStackTraceAsString(throwable));
+//            return builder.build();
+//        }
+//    }
 }

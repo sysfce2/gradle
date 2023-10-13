@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.groovyTemplates)
     implementation(libs.groovyTest)
     implementation(libs.groovyXml)
+    implementation(libs.gson)
     implementation(libs.ant)
     implementation(libs.fastutil)
     implementation(libs.guava)
