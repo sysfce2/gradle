@@ -418,24 +418,4 @@ public class BuildOperationTrace implements Stoppable {
         }
     }
 
-    // TODO:
-//    @NonNullApi
-//    private static class JsonThrowableConverter implements JsonGenerator.Converter {
-//        @Override
-//        public boolean handles(Class<?> type) {
-//            return Throwable.class.isAssignableFrom(type);
-//        }
-//
-//        @Override
-//        public Object convert(Object value, String key) {
-//            Throwable throwable = (Throwable) value;
-//            String message = throwable.getMessage();
-//            Builder<Object, Object> builder = ImmutableMap.builder();
-//            if (message != null) {
-//                builder.put("message", message);
-//            }
-//            builder.put("stackTrace", Throwables.getStackTraceAsString(throwable));
-//            return builder.build();
-//        }
-//    }
 }
