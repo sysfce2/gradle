@@ -227,8 +227,9 @@ public class GeneratedSingletonFileTree implements FileSystemMirroringFileTree, 
 
         @Nullable
         @Override
+        // NOTE: the GeneratedSingletonFileTree is only used for Jar and Ear, it does not make sense to support symbolic links here.
         public SymbolicLinkDetails getSymbolicLinkDetails() {
-            return null; //FIXME
+            return null;
         }
 
     }
