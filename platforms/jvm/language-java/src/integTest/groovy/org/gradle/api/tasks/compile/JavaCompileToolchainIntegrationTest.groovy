@@ -34,6 +34,7 @@ import static org.gradle.integtests.fixtures.SuggestionsMessages.GET_HELP
 import static org.gradle.integtests.fixtures.SuggestionsMessages.INFO_DEBUG
 import static org.gradle.integtests.fixtures.SuggestionsMessages.SCAN
 import static org.gradle.integtests.fixtures.SuggestionsMessages.STACKTRACE_MESSAGE
+import static org.gradle.jvm.toolchain.JavaToolchainDownloadIntegrationTest.TOOLCHAINS_HINT
 import static org.junit.Assume.assumeNotNull
 
 class JavaCompileToolchainIntegrationTest extends AbstractIntegrationSpec implements JavaToolchainFixture {
@@ -301,6 +302,7 @@ class JavaCompileToolchainIntegrationTest extends AbstractIntegrationSpec implem
         then:
         failure.assertHasCause("No locally installed toolchains match and toolchain auto-provisioning is not enabled.")
             .assertHasResolutions(
+                TOOLCHAINS_HINT,
                 DocumentationUtils.normalizeDocumentationLink("Learn more about toolchain auto-detection at https://docs.gradle.org/current/userguide/toolchains.html#sec:auto_detection."),
                 STACKTRACE_MESSAGE,
                 INFO_DEBUG,
@@ -371,6 +373,7 @@ class JavaCompileToolchainIntegrationTest extends AbstractIntegrationSpec implem
         then:
         failure.assertHasCause("No locally installed toolchains match and toolchain auto-provisioning is not enabled.")
             .assertHasResolutions(
+                TOOLCHAINS_HINT,
                 DocumentationUtils.normalizeDocumentationLink("Learn more about toolchain auto-detection at https://docs.gradle.org/current/userguide/toolchains.html#sec:auto_detection."),
                 STACKTRACE_MESSAGE,
                 INFO_DEBUG,

@@ -16,13 +16,17 @@
 
 package org.gradle.jvm.toolchain.internal;
 
+import com.google.common.collect.ImmutableList;
 import org.gradle.api.GradleException;
 import org.gradle.internal.exceptions.Contextual;
+import org.gradle.internal.exceptions.ResolutionProvider;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.platform.BuildPlatform;
 
+import java.util.List;
+
 @Contextual
-public class NoToolchainAvailableException extends GradleException {
+public class NoToolchainAvailableException extends GradleException implements ResolutionProvider {
 
     public NoToolchainAvailableException(
         JavaToolchainSpec specification,
@@ -31,12 +35,17 @@ public class NoToolchainAvailableException extends GradleException {
     ) {
         super(
             String.format(
-                "No matching toolchains found for requested specification: %s for %s on %s.",
+                "Cannot find a Java installation on your machine matching this tasks requirements: %s for %s on %s.",
                 specification.getDisplayName(),
                 buildPlatform.getOperatingSystem(),
                 buildPlatform.getArchitecture().toString().toLowerCase()
             ),
             cause
         );
+    }
+
+    @Override
+    public List<String> getResolutions() {
+        return ImmutableList.of("Run gradlew javaToolchains to get the list of detected Java installations.");
     }
 }

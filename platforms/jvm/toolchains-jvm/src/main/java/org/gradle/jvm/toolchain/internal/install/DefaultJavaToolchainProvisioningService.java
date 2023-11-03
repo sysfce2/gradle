@@ -51,6 +51,8 @@ import java.util.concurrent.Callable;
 public class DefaultJavaToolchainProvisioningService implements JavaToolchainProvisioningService {
 
     public static final String AUTO_DOWNLOAD = "org.gradle.java.installations.auto-download";
+    public static final String AUTO_DETECTION_TOOLCHAIN_HINT = "Learn more about toolchain auto-detection at " + Documentation.userManual("toolchains", "sec:auto_detection").getUrl() + ".";
+    public static final String DOWNLOAD_REPOSITORIES_TOOLCHAIN_HINT = "Learn more about toolchain repositories at " + Documentation.userManual("toolchains", "sub:download_repositories").getUrl() + ".";
 
     @Contextual
     private static class MissingToolchainException extends GradleException {
@@ -100,14 +102,14 @@ public class DefaultJavaToolchainProvisioningService implements JavaToolchainPro
     public File tryInstall(JavaToolchainSpec spec) {
         if (!isAutoDownloadEnabled()) {
             throw new ToolchainDownloadFailedException("No locally installed toolchains match and toolchain auto-provisioning is not enabled.",
-                "Learn more about toolchain auto-detection at " + Documentation.userManual("toolchains", "sec:auto_detection").getUrl() + ".");
+                AUTO_DETECTION_TOOLCHAIN_HINT);
         }
 
         List<? extends RealizedJavaToolchainRepository> repositories = toolchainResolverRegistry.requestedRepositories();
         if (repositories.isEmpty()) {
             throw new ToolchainDownloadFailedException("No locally installed toolchains match and toolchain download repositories have not been configured.",
-                "Learn more about toolchain auto-detection at " + Documentation.userManual("toolchains", "sec:auto_detection").getUrl() + ".",
-                "Learn more about toolchain repositories at " + Documentation.userManual("toolchains", "sub:download_repositories").getUrl() + ".");
+                AUTO_DETECTION_TOOLCHAIN_HINT,
+                DOWNLOAD_REPOSITORIES_TOOLCHAIN_HINT);
         }
 
         for (RealizedJavaToolchainRepository request : repositories) {
@@ -119,8 +121,8 @@ public class DefaultJavaToolchainProvisioningService implements JavaToolchainPro
         }
 
         throw new ToolchainDownloadFailedException("No locally installed toolchains match and the configured toolchain download repositories aren't able to provide a match either.",
-            "Learn more about toolchain auto-detection at " + Documentation.userManual("toolchains", "sec:auto_detection").getUrl() + ".",
-            "Learn more about toolchain repositories at " + Documentation.userManual("toolchains", "sub:download_repositories").getUrl() + ".");
+            AUTO_DETECTION_TOOLCHAIN_HINT,
+            DOWNLOAD_REPOSITORIES_TOOLCHAIN_HINT);
     }
 
     private File provisionInstallation(JavaToolchainSpec spec, URI uri, Collection<Authentication> authentications) {
